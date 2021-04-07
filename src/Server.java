@@ -1,9 +1,23 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 //Основной класс сервера
 public class Server {
+    private static Map<String, Connection> connectionMap = new ConcurrentHashMap<>(); //коллекция соединений, ключ - имя клиента, значение - соединение с ним
+
+    public static void sendBroadcastMessage(Message message){ //отправка сообщения всем соединениям
+        try{
+            for (Connection connection : connectionMap.values()){
+                connection.send(message); //отправка сообщения в out
+            }
+        }
+        catch (IOException ex){
+            ConsoleHelper.writeMessage("Произошла ошибка! Не удалось отправить сообщение");
+        }
+    }
 
     private static class Handler extends Thread{ //поток обработчик, в котором происходит обмен сообщениями с клиентом
         private Socket socket;
