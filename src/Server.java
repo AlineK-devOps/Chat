@@ -25,6 +25,33 @@ public class Server {
         public Handler(Socket socket){
             this.socket = socket;
         }
+
+        private String serverHandshake(Connection connection) throws IOException, ClassNotFoundException { //Знакомство сервера с клиентом
+            while (true){
+                connection.send(new Message(MessageType.NAME_REQUEST)); //сообщение с запросом имени клиента
+
+                Message clientMessage = connection.receive(); //получаем соощение с именем от клиента
+                if (clientMessage.getType() != MessageType.USER_NAME){
+                    ConsoleHelper.writeMessage(String.format("Получено сообщение от %s. Тип сообщения не соответсвует протоколу.", connection.getRemoteSocketAddress()));
+                    continue;
+                }
+
+                String userName = clientMessage.getData(); //получаем имя пользователя
+                if (userName.isEmpty()){
+                    ConsoleHelper.writeMessage(String.format("Попытка подключения к серверу с пустым именем от %s.", connection.getRemoteSocketAddress()));
+                    continue;
+                }
+
+                if (connectionMap.containsKey(userName)){
+                    ConsoleHelper.writeMessage(String.format("Попытка подключения к серверу с уже используемым именем от %s.", connection.getRemoteSocketAddress()));
+                    continue;
+                }
+
+                connectionMap.put(userName, connection); //добавляем нового пользователя
+                connection.send(new Message(MessageType.NAME_ACCEPTED)); //отправить, что имя принято
+                return userName;
+            }
+        }
     }
 
     public static void main(String[] args) {
