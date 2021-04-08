@@ -26,6 +26,29 @@ public class Server {
             this.socket = socket;
         }
 
+        @Override
+        public void run() { //метод, отвечающий за обработку сообщений
+            String userName = null;
+            try (Connection connection = new Connection(socket)){
+                ConsoleHelper.writeMessage(String.format("Соединение с %s установлено.", socket.getRemoteSocketAddress()));
+
+                userName = serverHandshake(connection); //знакомимся с пользователем
+                sendBroadcastMessage(new Message(MessageType.USER_ADDED, userName)); //рассылаем всем пользователям имя присоединившегося участника
+                notifyUsers(connection, userName); //сообщаем новому участнику о существуюших
+                serverMainLoop(connection, userName); //запускаем главный цикл обработки сообщений сервером
+
+            } catch (IOException | ClassNotFoundException exception) {
+                ConsoleHelper.writeMessage(String.format("Произошла ошибка при обмене данными с удаленным сервером %s", socket.getRemoteSocketAddress()));
+            }
+            finally { //соединение разорвано
+                if (userName != null){
+                    connectionMap.remove(userName); //удаляем пользовательское соединение из connectionMap
+                    sendBroadcastMessage(new Message(MessageType.USER_REMOVED, userName)); //рассылаем всем пользователям, что пользователь удален
+                }
+                ConsoleHelper.writeMessage(String.format("Соединение с удалённым адресом %s закрыто.", socket.getRemoteSocketAddress()));
+            }
+        }
+
         private String serverHandshake(Connection connection) throws IOException, ClassNotFoundException { //Знакомство сервера с клиентом
             while (true){
                 connection.send(new Message(MessageType.NAME_REQUEST)); //сообщение с запросом имени клиента
