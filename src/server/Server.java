@@ -1,3 +1,10 @@
+package server;
+
+import server.Connection;
+import server.ConsoleHelper;
+import server.Message;
+import server.MessageType;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;

@@ -1,3 +1,5 @@
+package server;
+
 //Enum, который отвечает за тип сообщений пересылаемых между клинетом и сервером
 public enum MessageType {
     NAME_REQUEST, //Запрос имени

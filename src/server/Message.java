@@ -1,3 +1,5 @@
+package server;
+
 import java.io.Serializable;
 
 //Класс, отвечающий за пересылаемые сообщения
