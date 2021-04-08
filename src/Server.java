@@ -52,6 +52,13 @@ public class Server {
                 return userName;
             }
         }
+
+        private void notifyUsers(Connection connection, String userName) throws IOException{ //Отправка новому участнику информации об остальных участниках
+            for (String otherName : connectionMap.keySet()){
+                if (!userName.equals(otherName))
+                connection.send(new Message(MessageType.USER_ADDED, otherName));
+            }
+        }
     }
 
     public static void main(String[] args) {
