@@ -5,12 +5,28 @@ import server.Message;
 import server.MessageType;
 
 import java.io.IOException;
+import java.net.Socket;
 
 public class Client {
     protected Connection connection;
     private volatile boolean clientConnected = false; //присоединен ли клиент к серверу
 
     public class SocketThread extends Thread{ //Поток, устанавливающий сокетное соединение и читающий сообщения с сервера
+
+        @Override
+        public void run() { //работа клиента
+            try{
+                String address = getServerAddress();
+                int port = getServerPort();
+                Socket socket = new Socket(address, port);
+                connection = new Connection(socket);
+                clientHandshake();
+                clientMainLoop();
+            }
+            catch (IOException | ClassNotFoundException ex){
+                notifyConnectionStatusChanged(false);
+            }
+        }
 
         protected void clientMainLoop() throws IOException, ClassNotFoundException{ //главный цикл обработки сообщений сервера
             while (true){
