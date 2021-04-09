@@ -11,6 +11,28 @@ public class Client {
     private volatile boolean clientConnected = false; //присоединен ли клиент к серверу
 
     public class SocketThread extends Thread{ //Поток, устанавливающий сокетное соединение и читающий сообщения с сервера
+
+        protected void clientMainLoop() throws IOException, ClassNotFoundException{ //главный цикл обработки сообщений сервера
+            while (true){
+                Message message = connection.receive();
+                if (message.getType() == null) throw new IOException("Unexpected MessageType");
+
+                switch (message.getType()){
+                    case TEXT:
+                        processIncomingMessage(message.getData()); //если это текстовое сообщение, вывести его
+                        break;
+                    case USER_ADDED:
+                        informAboutAddingNewUser(message.getData()); //если это сообщение о новом пользователе, вывести его имя
+                        break;
+                    case USER_REMOVED:
+                        informAboutDeletingNewUser(message.getData()); //если это сообщение о выходе пользователе, вывести его имя
+                        break;
+                    default:
+                        throw new IOException("Unexpected MessageType");
+                }
+            }
+        }
+
         protected void processIncomingMessage(String message){ //Выводит текст message в консоль
             ConsoleHelper.writeMessage(message);
         }
@@ -27,6 +49,24 @@ public class Client {
             Client.this.clientConnected = clientConnected;
             synchronized (Client.this){
                 Client.this.notify();
+            }
+        }
+
+        protected void clientHandshake() throws IOException, ClassNotFoundException{ //Представляет клиента серверу
+            while (true){
+                Message message = connection.receive(); //получаем сообщение с запросом имени пользователя
+                if (message.getType() == null) throw new IOException("Unexpected MessageType");
+
+                switch (message.getType()){
+                    case NAME_REQUEST:
+                        connection.send(new Message(MessageType.USER_NAME, getUserName()));//отправляем серверу имя
+                        break;
+                    case NAME_ACCEPTED:
+                        notifyConnectionStatusChanged(true); //сообщаем главному потоку, что соединение установлено
+                        return;
+                    default:
+                        throw new IOException("Unexpected MessageType");
+                }
             }
         }
     }
