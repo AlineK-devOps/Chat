@@ -11,7 +11,24 @@ public class Client {
     private volatile boolean clientConnected = false; //присоединен ли клиент к серверу
 
     public class SocketThread extends Thread{ //Поток, устанавливающий сокетное соединение и читающий сообщения с сервера
+        protected void processIncomingMessage(String message){ //Выводит текст message в консоль
+            ConsoleHelper.writeMessage(message);
+        }
 
+        protected void informAboutAddingNewUser(String userName){ //выводит информацию о том. что участник userName присоединился к чату
+            ConsoleHelper.writeMessage(String.format("%s присоединился к чату", userName));
+        }
+
+        protected void informAboutDeletingNewUser(String userName){ //выводит информацию о том. что участник userName покинул чат
+            ConsoleHelper.writeMessage(String.format("%s покинул чат", userName));
+        }
+
+        protected void notifyConnectionStatusChanged(boolean clientConnected){ //оповещает основной поток о соединении
+            Client.this.clientConnected = clientConnected;
+            synchronized (Client.this){
+                Client.this.notify();
+            }
+        }
     }
 
     public void run(){
