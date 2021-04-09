@@ -147,7 +147,7 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        Client client = new Client();
-        client.run();
+        Client client1 = new Client();
+        client1.run();
     }
 }
