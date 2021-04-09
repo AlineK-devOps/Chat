@@ -14,6 +14,33 @@ public class Client {
 
     }
 
+    public void run(){
+        SocketThread socketThread = getSocketThread();
+        socketThread.setDaemon(true); //при выходе из программы вспомогательный поток прервется автоматически
+        socketThread.start();
+
+        synchronized (this){
+            try {
+                wait(); //ожидаем, пока вспомогательный поток установит соединение с сервером
+            } catch (InterruptedException e) {
+                ConsoleHelper.writeMessage("Не удалось установить соединение с сервером.");
+                return;
+            }
+        }
+
+        if (clientConnected)
+            ConsoleHelper.writeMessage("Соединение установлено.\nДля выхода наберить команду 'exit'.");
+        else
+            ConsoleHelper.writeMessage("Произошла ошибка во время работы клиента.");
+
+        while (clientConnected){
+            String message = ConsoleHelper.readString();//Считываем сообщения с консоли, пока не введено слово "exit" и подключение стабильно
+            if (message.equals("exit")) break;
+            if (shouldSendTextFromConsole())
+                sendTextMessage(message); //отправляем сообщение серверу
+        }
+    }
+
     protected String getServerAddress(){ //запрашивает ввод адреса сервера у пользователя
         ConsoleHelper.writeMessage("Введите адрес сервера:");
         return ConsoleHelper.readString();
@@ -44,5 +71,10 @@ public class Client {
             ConsoleHelper.writeMessage("Не удалось отправить сообщение");
             clientConnected = false;
         }
+    }
+
+    public static void main(String[] args) {
+        Client client = new Client();
+        client.run();
     }
 }
